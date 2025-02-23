@@ -3,23 +3,17 @@
 import { useEffect, useRef, useState, Suspense, lazy, useCallback } from "react";
 import { useConvex } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import Spinner from "../../../../_components/Spinner";
 import dynamic from "next/dynamic";
 import { useApiMutation } from "@/hooks/use-api-mutation";
 import { useAppContext } from "@/app/context_";
 import { Id } from "@/convex/_generated/dataModel";
 import { useAuth } from "@/app/context_/AuthContext";
-import Spinner from "@/app/_components/Spinner";
-import { useWorkspace } from "@/app/context_/WorkspaceContext";
-import WorkspaceHeader from "@/app/(routes)/workspace/_components/WorkspaceHeader";
+import { useWorkspace } from "../../../../context_/WorkspaceContext";
 
-const Editor = dynamic(
-  () => import("@/app/(routes)/workspace/_components/Editor"), 
-  { suspense: true, ssr: false }
-);
-const Canvas = dynamic(
-  () => import("@/app/(routes)/workspace/_components/Canvas"), 
-  { suspense: true, ssr: false }
-);
+const WorkspaceHeader = lazy(() => import("@/app/(routes)/workspace/_components/WorkspaceHeader"));
+const Editor = dynamic(() => import("@/app/(routes)/workspace/_components/Editor"), { suspense: true, ssr: false });
+const Canvas = dynamic(() => import("@/app/(routes)/workspace/_components/Canvas"), { suspense: true, ssr: false });
 
 interface WorkspacePageProps {
   params: {
@@ -46,17 +40,17 @@ const PreviewPage: React.FC<WorkspacePageProps> = ({ params }) => {
 
   const fetchFileData = useCallback(async () => {
     if (!params.fileId) return;
-    
+  
     const result = await convex.query(api.files.getFileById, { _id: params.fileId });
-    
+  
     if (JSON.stringify(result) !== JSON.stringify(fileData)) {
       setFileData(result);
     }
-  }, [params.fileId, convex, setFileData]);
+  }, [params.fileId, convex, setFileData, fileData]);  
   
   useEffect(() => {
     fetchFileData();
-  }, [params.fileId, showEditor, showCanvas, showBoth, onSaveTrigger]);  
+  }, [fetchFileData, showEditor, showCanvas, showBoth]);   
   
   const handleMouseDown = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -69,7 +63,7 @@ const PreviewPage: React.FC<WorkspacePageProps> = ({ params }) => {
     if (!isResizingRef.current) return;
     const newWidth = (event.clientX / window.innerWidth) * 100;
     if (editorRef.current) {
-      const clampedWidth = Math.min(Math.max(newWidth, 35), 65);
+      const clampedWidth = Math.min(Math.max(newWidth, 40), 65);
       if (editorRef.current.style.width !== `${clampedWidth}%`) {
         editorRef.current.style.width = `${clampedWidth}%`;
       }
@@ -130,7 +124,7 @@ const PreviewPage: React.FC<WorkspacePageProps> = ({ params }) => {
           <Suspense fallback={<Spinner />}>
             <aside
               className={`h-full ${showBoth ? "relative" : ""}`}
-              style={{ width: showBoth ? "35%" : "100%" }}
+              style={{ width: showBoth ? "40%" : "100%" }}
               ref={editorRef}
             >
               {showBoth && (
@@ -140,10 +134,7 @@ const PreviewPage: React.FC<WorkspacePageProps> = ({ params }) => {
                   h-full w-2 bg-gray-200 dark:bg-gray-800 absolute right-0 top-0 z-50 hidden md:block"
                 />
               )}
-              <Editor 
-                preview
-                fileId={params.fileId} 
-              />
+              <Editor preview fileId={params.fileId} />
             </aside>
           </Suspense>
         )}
@@ -151,14 +142,13 @@ const PreviewPage: React.FC<WorkspacePageProps> = ({ params }) => {
           <Suspense fallback={<Spinner />}>
             <div
               className="h-full flex-grow border-l overflow-auto"
-              style={{ width: "100%" }}
+              style={{ width: showBoth ? "60%" : "100%" }}
               ref={canvasRef}
             >
               {fileData && (
                 <Canvas
                   preview
                   fileId={params.fileId}
-                  fileData={fileData}
                 />
               )}
             </div>
