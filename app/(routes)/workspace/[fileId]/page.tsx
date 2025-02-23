@@ -40,17 +40,17 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ params }) => {
 
   const fetchFileData = useCallback(async () => {
     if (!params.fileId) return;
-    
+  
     const result = await convex.query(api.files.getFileById, { _id: params.fileId });
-    
+  
     if (JSON.stringify(result) !== JSON.stringify(fileData)) {
       setFileData(result);
     }
-  }, [params.fileId, convex, setFileData]);
+  }, [params.fileId, convex, setFileData, fileData]);  
   
   useEffect(() => {
     fetchFileData();
-  }, [params.fileId, showEditor, showCanvas, showBoth, onSaveTrigger]);  
+  }, [fetchFileData, showEditor, showCanvas, showBoth]);   
   
   const handleMouseDown = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -63,7 +63,7 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ params }) => {
     if (!isResizingRef.current) return;
     const newWidth = (event.clientX / window.innerWidth) * 100;
     if (editorRef.current) {
-      const clampedWidth = Math.min(Math.max(newWidth, 35), 65);
+      const clampedWidth = Math.min(Math.max(newWidth, 40), 65);
       if (editorRef.current.style.width !== `${clampedWidth}%`) {
         editorRef.current.style.width = `${clampedWidth}%`;
       }
@@ -123,7 +123,7 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ params }) => {
           <Suspense fallback={<Spinner />}>
             <aside
               className={`h-full ${showBoth ? "relative" : ""}`}
-              style={{ width: showBoth ? "35%" : "100%" }}
+              style={{ width: showBoth ? "40%" : "100%" }}
               ref={editorRef}
             >
               {showBoth && (
@@ -141,13 +141,12 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ params }) => {
           <Suspense fallback={<Spinner />}>
             <div
               className="h-full flex-grow border-l overflow-auto"
-              style={{ width: "100%" }}
+              style={{ width: showBoth ? "60%" : "100%" }}
               ref={canvasRef}
             >
               {fileData && (
                 <Canvas
                   fileId={params.fileId}
-                  fileData={fileData}
                 />
               )}
             </div>

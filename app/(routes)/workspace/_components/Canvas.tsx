@@ -7,10 +7,10 @@ import { useMutation } from "convex/react";
 import { MainMenu } from "@excalidraw/excalidraw";
 import { api } from "@/convex/_generated/api";
 import { Id } from '@/convex/_generated/dataModel';
-import { FILE } from '../../dashboard/_components/SideNavTop'
 import Spinner from "@/app/_components/Spinner";
 import { useWorkspace } from "../../../context_/WorkspaceContext";
 import { getInitialElements } from "@/utils/initialElements";
+import { useAppContext } from "@/app/context_";
 
 const Excalidraw = dynamic(
   () => import("@excalidraw/excalidraw").then((mod) => mod.Excalidraw),
@@ -20,16 +20,16 @@ const Excalidraw = dynamic(
 interface CanvasProps {
   preview?: boolean;
   fileId: Id<"files">;
-  fileData: FILE;
 }
 
 const Canvas: React.FC<CanvasProps> = ({ 
   preview,
-  fileId, 
-  fileData 
+  fileId,
 }) => {
   const { theme } = useTheme();
   const { onSaveTrigger } = useWorkspace();
+  const { fileData } = useAppContext();
+
   const [whiteboardData, setWhiteboardData] = useState<any>(null);
   const [isReady, setIsReady] = useState(false);
 
@@ -58,11 +58,11 @@ const Canvas: React.FC<CanvasProps> = ({
       setWhiteboardData(getInitialElements(theme || "light"));
     }
     setIsReady(true);
-  }, [fileData, theme]); 
+  }, [fileData, theme, fileId]); 
 
-  if (!isReady) {
-    return <div><Spinner /></div>;
-  }
+  if (!fileData || fileData._id !== fileId) {
+    return <Spinner />;
+  }  
 
   return (
     <div 
@@ -73,8 +73,9 @@ const Canvas: React.FC<CanvasProps> = ({
     >
       {fileData && (
         <Excalidraw
+          key={fileId}
           onChange={(elements) => setWhiteboardData(elements)}
-          viewModeEnabled={preview ? true:false}
+          viewModeEnabled={preview ? true : false}
           UIOptions={{
             canvasActions: {
               saveToActiveFile: false,

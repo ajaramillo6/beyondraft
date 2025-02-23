@@ -17,7 +17,7 @@ import { useAppContext } from "@/app/context_";
 import { useWorkspace } from "../../../context_/WorkspaceContext";
 import { Id } from "@/convex/_generated/dataModel";
 
-// Function to return raw document structure
+// Raw document structure
 const rawDocument = (title: string) => ({
   time: Date.now(),
   blocks: [
@@ -49,26 +49,18 @@ const Editor: React.FC<EditorProps> = ({ preview, fileId }) => {
   const { fileData } = useAppContext();
   const { onSaveTrigger } = useWorkspace();
   const ref = useRef<EditorJS | null>(null);
-  const isReady = useRef(false);
 
   const updateDocument = useMutation(api.files.updateDocument);
 
-  useEffect(() => {
-    if (!fileData || ref.current) return;
-    initEditor();
-  
-    return () => {
-      if (ref.current?.destroy) {
-        ref.current.destroy();
-        ref.current = null;
-        isReady.current = false;
-      }
-    };
-  }, [fileData]);
+  const clearEditor = () => {
+    const holder = document.getElementById("editorjs");
+    if (holder) holder.innerHTML = "";
+    ref.current = null;
+  };
 
   const initEditor = () => {
-    if (ref.current) return;
-  
+    clearEditor();
+
     try {
       ref.current = new EditorJS({
         readOnly: !!preview,
@@ -79,27 +71,19 @@ const Editor: React.FC<EditorProps> = ({ preview, fileId }) => {
             shortcut: "CMD+SHIFT+H",
             config: { placeholder: "Enter a header" },
           },
-          list: {
-            class: List as unknown as ToolConstructable,
-            inlineToolbar: true,
-          },
-          checklist: {
-            class: Checklist as unknown as ToolConstructable,
-            inlineToolbar: true,
-          },
+          list: { class: List as unknown as ToolConstructable, inlineToolbar: true },
+          checklist: { class: Checklist as unknown as ToolConstructable, inlineToolbar: true },
           paragraph: {
             class: Paragraph as unknown as ToolConstructable,
             inlineToolbar: ["bold", "italic", "inlineCode"],
-          },          
-          inlineCode: {
-            class: InlineCode as unknown as ToolConstructable,
           },
+          inlineCode: { class: InlineCode as unknown as ToolConstructable },
         },
         data: fileData?.document
           ? JSON.parse(fileData.document)
           : rawDocument(fileData?.fileName || ""),
       });
-  
+
       setTimeout(() => {
         document.querySelectorAll(".ce-header").forEach((el) => {
           el.setAttribute("data-placeholder", "Enter a header");
@@ -111,12 +95,19 @@ const Editor: React.FC<EditorProps> = ({ preview, fileId }) => {
           );
         });
       }, 100);
-  
-      isReady.current = true;
     } catch (error) {
       console.error("Error initializing editor:", error);
     }
-  };  
+  };
+
+  useEffect(() => {
+    if (fileData) {
+      initEditor();
+    }
+    return () => {
+      clearEditor();
+    };
+  }, [fileId, fileData]);
 
   const onSaveDocument = async () => {
     if (!ref.current) return;
@@ -143,7 +134,7 @@ const Editor: React.FC<EditorProps> = ({ preview, fileId }) => {
   return (
     <div
       id="editorjs"
-      className="bg-white dark:bg-neutral-950 px-10 w-screen md:w-full"
+      className="bg-white dark:bg-neutral-950 px-10 w-screen md:w-full overflow-auto"
       style={{ height: "100%" }}
     />
   );
