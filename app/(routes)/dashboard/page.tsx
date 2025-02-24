@@ -7,18 +7,16 @@ import { api } from "@/convex/_generated/api";
 import Header from "./_components/Header";
 import FileList from "./_components/FileList";
 import { useAuth } from "@/app/context_/AuthContext";
+import { useSearchParams } from "next/navigation";
 
-interface DashboardProps {
-  searchParams: {
-    search?: string;
-    archive?: string;
-  };
-}
-
-const Dashboard: React.FC<DashboardProps> = ({ searchParams }) => {
+const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const convex = useConvex();
   const createUser = useMutation(api.user.createUser);
+  const searchParams = useSearchParams();
+
+  const search = searchParams.get("search") ?? undefined;
+  const archive = searchParams.get("archive") ?? undefined;
 
   useEffect(() => {
     if (user) {
@@ -38,7 +36,6 @@ const Dashboard: React.FC<DashboardProps> = ({ searchParams }) => {
           email: user.email,
           image: user.picture,
         });
-
         toast.success("Account has been created");
       }
     } catch (error) {
@@ -50,7 +47,7 @@ const Dashboard: React.FC<DashboardProps> = ({ searchParams }) => {
   return (
     <div className="p-8">
       <Header />
-      <FileList query={searchParams} />
+      <FileList query={{ search, archive }} />
     </div>
   );
 };

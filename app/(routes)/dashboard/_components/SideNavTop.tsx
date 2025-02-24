@@ -157,7 +157,7 @@ const SideNavTop = (
         </Button>
       </Link>
 
-      <Link href={{ pathname: "/dashboard", query: { archive: true } }}>
+      <Link href={{ pathname: "/dashboard", query: { archive: "true" } }}>
         <Button 
             variant={showArchive ? "default" : "outline"} 
             className={buttonClass(showArchive)} 
