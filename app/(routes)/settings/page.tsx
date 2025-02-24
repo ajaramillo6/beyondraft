@@ -1,16 +1,15 @@
 "use client";
 
+import React from "react";
 import Profile from "./_components/Profile";
 import ProjectsList from "./_components/ProjectsList";
 import SettingsHeader from "./_components/SettingsHeader";
+import { useSearchParams } from "next/navigation";
 
-interface SettingsProps {
-  searchParams: {
-    search?: string;
-  };
-}
+const SettingsPage: React.FC = () => {
+  const searchParams = useSearchParams();
+  const search = searchParams.get("search") ?? undefined;
 
-const SettingsPage: React.FC<SettingsProps> = ({ searchParams }) => {
   return (
     <div>
       <SettingsHeader />
@@ -21,7 +20,7 @@ const SettingsPage: React.FC<SettingsProps> = ({ searchParams }) => {
         </aside>
         {/* Projects List Section */}
         <main className="basis-full md:basis-2/3 p-6">
-          <ProjectsList query={searchParams} />
+          <ProjectsList query={{ search }} />
         </main>
       </div>
     </div>
